@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:8000";
+
 const TreeView = ({ data, level = 0 }) => {
   if (typeof data !== "object" || data === null) {
     return <div style={{ marginLeft: level * 15 }}>{String(data)}</div>;
@@ -27,7 +29,7 @@ const App = () => {
   const [metadata, setMetadata] = useState([]);
   const [mdLength, setMDLength] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [viewMode, setViewMode] = useState("formatted"); // "formatted" or "tree"
+  const [viewMode, setViewMode] = useState("formatted");
 
   const handleModeSelection = (choice) => {
     setMode(choice);
@@ -62,7 +64,7 @@ const App = () => {
         formData.append("file", file);
 
         try {
-          const response = await fetch("http://localhost:8000/upload/", {
+          const response = await fetch(`${API_BASE_URL}/upload/`, {
             method: "POST",
             body: formData,
           });
@@ -157,7 +159,7 @@ const App = () => {
 
               <button 
                 onClick={handleUpload} 
-                disabled={loading || (mode === 1 && !selectedFiles.image1) || (mode === 2 && (!selectedFiles.image1 || !selectedFiles.image2))}
+                disabled={loading}
                 style={{
                   padding: "10px 15px",
                   backgroundColor: "#007bff",
@@ -177,35 +179,12 @@ const App = () => {
       ) : (
         <div style={{ textAlign: "center" }}>
           <h3 style={{ color: "#333" }}>Metadata</h3>
-          {mdLength === 1 && mode === 1 && (
-            <button 
-              onClick={() => setViewMode(viewMode === "formatted" ? "tree" : "formatted")}
-              style={{
-                marginBottom: "10px",
-                padding: "10px 15px",
-                backgroundColor: "#28a745",
-                color: "white",
-                border: "none",
-                borderRadius: "5px",
-                cursor: "pointer"
-              }}
-            >
-              Toggle View ({viewMode === "formatted" ? "Tree" : "Formatted"})
-            </button>
-          )}
-          <div style={{ display: "flex", justifyContent: mdLength === 1 ? "center" : "space-between", width: mdLength === 1 ? "80%" : "100%" }}>
-            {metadata.filter(({ key }) => selectedFiles[key] !== null).map(({ key, data }) => (
-              <div key={key} style={{ width: mdLength === 1 ? "100%" : "48%" }}>
-                <h4>{selectedFiles[key]?.name}</h4>
-                <div style={{ background: "#eef", padding: "10px", borderRadius: "5px", textAlign: "left" }}>
-                  {viewMode === "formatted" ? (
-                    <pre style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{JSON.stringify(data, null, 2)}</pre>
-                  ) : (
-                    <TreeView data={data} />
-                  )}
-                </div>
-              </div>
-            ))}
+          <div style={{ background: "#eef", padding: "10px", borderRadius: "5px", textAlign: "left" }}>
+            {viewMode === "formatted" ? (
+              <pre style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{JSON.stringify(metadata, null, 2)}</pre>
+            ) : (
+              <TreeView data={metadata} />
+            )}
           </div>
         </div>
       )}
